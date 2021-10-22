@@ -1,1 +1,1 @@
-"0","pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate,tidyr,tidyverse)"
+"0","pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate,tidyr,tidyverse, estimatr, foreign, stats, psych, stargazer,texreg, car)"
