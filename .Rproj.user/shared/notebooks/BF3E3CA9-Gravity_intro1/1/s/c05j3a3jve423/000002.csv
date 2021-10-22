@@ -1,0 +1,97 @@
+"0","install.packages(""stargazer"") "
+"1","Error in "
+"1",""
+"1","install.packages"
+"1",""
+"1"," : "
+"1",""
+"1","Updating loaded packages"
+"1",""
+"1","
+"
+"0","install.packages(""texreg"") "
+"1","Error in "
+"1",""
+"1","install.packages"
+"1",""
+"1"," : "
+"1",""
+"1","Updating loaded packages"
+"1",""
+"1","
+"
+"0","install.packages(""texreg"") "
+"1","Error in "
+"1",""
+"1","install.packages"
+"1",""
+"1"," : "
+"1",""
+"1","Updating loaded packages"
+"1",""
+"1","
+"
+"0","# load package"
+"0","#library(""dplyr"")"
+"0","library(""stargazer"")"
+"0","#tab_model(reg1)"
+"0","library(texreg)"
+"0",""
+"0","#stargazer(reg1a, type = 'html')"
+"0","#stargazer(SERdataDS, type = ""text"")"
+"0",""
+"0","# texreg::screenreg(list(reg1, reg2, reg3),     # if knitting to pdf"
+"0","#                   omit.coef=c('exp|imp'),"
+"0","# #custom.coef.names = reglabels,"
+"0","# include.ci = FALSE,"
+"0","# caption = '',"
+"0","# custom.note = 'Note: robust standard errors.')"
+"0",""
+"0","texreg(list(reg1, reg2, reg3),     # if knitting to pdf"
+"0","                  omit.coef=c('exp|imp'),"
+"0","#custom.coef.names = reglabels,"
+"0","include.ci = FALSE,"
+"0","caption = '',"
+"0","custom.note = 'Note: robust standard errors.')"
+"2","1 coefficient  not defined because the design matrix is rank deficient
+
+"
+"1","
+\begin{table}
+\begin{center}
+\begin{tabular}{l c c c}
+\hline
+ & Model 1 & Model 2 & Model 3 \\
+\hline
+(Intercept)  & $-22.04^{***}$ & $-27.11^{***}$ & $6.59^{***}$  \\
+             & $(0.67)$       & $(1.80)$       & $(0.91)$      \\
+log(dist)    & $-0.74^{***}$  & $-1.11^{***}$  & $-1.01^{***}$ \\
+             & $(0.04)$       & $(0.06)$       & $(0.05)$      \\
+contig       & $0.40^{*}$     & $-0.56^{*}$    & $0.24$        \\
+             & $(0.18)$       & $(0.25)$       & $(0.20)$      \\
+comlang\_off & $0.89^{***}$   & $1.38^{***}$   & $0.40^{***}$  \\
+             & $(0.10)$       & $(0.21)$       & $(0.09)$      \\
+colony       & $1.20^{***}$   & $0.18$         & $1.17^{***}$  \\
+             & $(0.12)$       & $(0.21)$       & $(0.12)$      \\
+comcol       & $-0.02$        &                & $-0.09$       \\
+             & $(0.20)$       &                & $(0.26)$      \\
+\hline
+R$^2$        & $0.54$         & $0.68$         & $0.77$        \\
+Adj. R$^2$   & $0.54$         & $0.68$         & $0.74$        \\
+Num. obs.    & $3884$         & $816$          & $4184$        \\
+RMSE         & $1.53$         & $1.38$         & $1.13$        \\
+N Clusters   & $2152$         & $414$          & $2329$        \\
+\hline
+\multicolumn{4}{l}{\scriptsize{Note: robust standard errors.}}
+\end{tabular}
+\caption{}
+\label{table:coefficients}
+\end{center}
+\end{table}
+"
+"0","# htmlreg(list(reg1, reg2, reg3),  # if knitting to html"
+"0","# #custom.coef.names = reglabels,"
+"0","# include.ci = FALSE,"
+"0","# caption = '',"
+"0","# custom.note = 'Note: robust standard errors.')"
+"0",""

@@ -10,15 +10,15 @@ output:
 ## Setup
 
 ```{r packages, include=FALSE}
-pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate,tidyr,tidyverse, estimatr, foreign, stats, psych, stargazer,texreg, car)
+pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate,tidyr,tidyverse)
 ```
-
 ```{r, include=FALSE}
 here::here()
 ```
 
 ```{r setup, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(foreign)
 bilateralData <- read.dta("servicesdataset 2.dta")
 SERdata <- bilateralData[bilateralData$sector=="SER",]
 ```
@@ -31,6 +31,7 @@ SERdataGRM <- SERdata[,c("trade","dist","gdp_exp","gdp_imp")]
 row_sub = apply(SERdataGRM, 1, function(row) all(row !=0 ))
 SERdataGRM <- SERdataGRM[row_sub,]
 # calculate the correlation and not include missing values
+library(stats)
 correlation <- cor(log(SERdataGRM), use="na.or.complete")
 correlation
 
@@ -41,9 +42,11 @@ correlation
 SERdataDS <- SERdata[,c("trade","dist","gdp_exp","gdp_imp", "contig", "comlang_off", "colony", "comcol", "etcr_exp", "etcr_imp" )]
 # variables x, y, and z must be non-zero
 # CODE FOR QUESTION 1
+library(dplyr)
 SERdataDS <- filter_at(SERdataDS, vars("trade"), all_vars((.) != 0))
 summary(SERdataDS)
 sum(SERdataDS)
+library(psych)
 describe(SERdataDS)
 #library(stargazer)
 #stargazer(SERdataDS, type = "html")
@@ -164,6 +167,8 @@ A command that performs OLS with robust clustered standard errors and equivalent
 SERdataLR <- SERdata[complete.cases(SERdata[ ,
 c("dist","gdp_exp","gdp_imp")]),]
 SERdataLR <- SERdataLR[SERdataLR$trade != 0, ]
+install.packages("estimatr")
+library(estimatr)
 reg1 <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) +
 contig + comlang_off + colony + comcol, cluster = dist, data = SERdataLR,
 se_type = "stata")
@@ -181,6 +186,8 @@ SERdataLR$ln_gdp_exp <- log(SERdataLR$gdp_exp)
 reg1_star <- lm_robust(log(trade) ~ log(dist) + ln_gdp_imp + ln_gdp_exp +
 contig + comlang_off + colony + comcol,
 cluster = dist, data = SERdataLR, se_type = "stata")
+install.packages("car") 
+library(car)
 ```
 
 
@@ -207,6 +214,8 @@ pf(ftest2$F, 4, length(unique(SERdataLR$dist))-1, lower.tail=FALSE)
 
 ```{r reg2, warning=FALSE}
 # prepare the data as required in Box 1 and Box 7
+# install.packages("estimatr") # uncomment in order to install package
+library(estimatr)
 reg2 <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) +
 contig + comlang_off + colony + comcol + etcr_exp +
 etcr_imp, cluster = dist, data = SERdataLR,
@@ -231,6 +240,8 @@ summary(reg2)
 # make sure you have the data loaded and transformed as in Box 1
 # include only complete cases for variables for which we take log
 SERdataFX1 <- SERdata[SERdata$trade!=0 & SERdata$dist!=0,]
+install.packages("estimatr")
+library(estimatr)
 reg3 <- lm_robust(log(trade) ~ log(dist) + contig + comlang_off +
 colony + comcol + exp + imp,
 cluster = dist, data = SERdataFX1, se_type = "stata")
@@ -243,17 +254,10 @@ summary(reg3)
 OECDdummy <- SERdata %>%
   mutate(oecd = ifelse(is.na(SERdata$etcr_exp)|is.na(SERdata$etcr_imp), 0, 1))
 
+
 OECDdumDS <- OECDdummy[,c("trade", "dist", "gdp_exp","gdp_imp","contig", "comlang_off", "colony", "comcol", "oecd")]
 
-
-
-OECDLR <- OECDdumDS[complete.cases(OECDdumDS[ ,
-c("dist","gdp_exp","gdp_imp")]),]
-
-OECDLR <- OECDdumDS[OECDdumDS$trade != 0, ]
-
-
-regoecd <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) + contig + comlang_off + colony + comcol + oecd, cluster = dist, data = OECDLR,
+regoecd <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) + contig + comlang_off + colony + comcol + oecd, cluster = dist, data = OECDdumDS,
 se_type = "stata")
 summary(regoecd)
 
@@ -265,10 +269,15 @@ summary(regoecd)
 ## Summary of Results
 
 ```{r models, results = 'asis', warning=FALSE}
+install.packages("stargazer") 
+install.packages("texreg") 
+install.packages("texreg") 
 
 # load package
 #library("dplyr")
+library("stargazer")
 #tab_model(reg1)
+library(texreg)
 
 #stargazer(reg1a, type = 'html')
 #stargazer(SERdataDS, type = "text")
