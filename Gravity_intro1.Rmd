@@ -1,0 +1,302 @@
+---
+title: "The Gravity Model"
+author: "Jesus Davila- Sara Sabino- Adoracion Hernandez"
+date: "10/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Setup
+
+```{r packages, include=FALSE}
+pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate)
+```
+```{r, include=FALSE}
+here::here()
+```
+
+```{r setup, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(foreign)
+bilateralData <- read.dta("servicesdataset 2.dta")
+SERdata <- bilateralData[bilateralData$sector=="SER",]
+```
+
+## Data Cleaning and Correlation
+
+```{r sum, warning=FALSE}
+SERdataGRM <- SERdata[,c("trade","dist","gdp_exp","gdp_imp")]
+# delete rows for which trade=0
+row_sub = apply(SERdataGRM, 1, function(row) all(row !=0 ))
+SERdataGRM <- SERdataGRM[row_sub,]
+# calculate the correlation and not include missing values
+library(stats)
+correlation <- cor(log(SERdataGRM), use="na.or.complete")
+correlation
+
+```
+
+```{r sum2, warning=FALSE}
+# dataset contains only 4 variables required for correlation
+SERdataDS <- SERdata[,c("trade","dist","gdp_exp","gdp_imp", "contig", "comlang_off", "colony", "comcol", "etcr_exp", "etcr_imp" )]
+# variables x, y, and z must be non-zero
+# CODE FOR QUESTION 1
+library(dplyr)
+SERdataDS <- filter_at(SERdataDS, vars("trade"), all_vars((.) != 0))
+summary(SERdataDS)
+sum(SERdataDS)
+describe(SERdataDS)
+#library(stargazer)
+#stargazer(SERdataDS, type = "html")
+
+```
+
+
+## 
+
+### Scatter plot and line of best fit for trade versus distance.
+
+```{r graph1, warning=FALSE}
+# CODE FOR QUESTION 2
+# TRADE AND DISTANCE
+df = read.dta("servicesdataset 2.dta", convert.f=TRUE)
+logdistance <- log(SERdataGRM$dist)
+logtrade <- log(SERdataGRM$trade)
+plot1 <- ggplot(SERdataDS, aes(x = logdistance, y = logtrade,)) +
+ geom_point(shape=1) + 
+ geom_smooth(method=lm, # Add linear regression line
+ se=FALSE) + # Don't add shaded confidence region
+ theme_classic() + #no background
+ ggtitle("Trade versus Distance combined") +
+ theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
+ labs(y="Log(Distance)", x = "log(Trade)") + # set names for axes
+ scale_y_log10(labels = scales::comma)# ln base scale
+plot1
+```
+
+### Scatter plot and line of best fit for trade versus combined GDP. 
+
+```{r graph2, warning=FALSE}
+#TRADE AND COMBINED GDP
+logdifference <- log(SERdataGRM$gdp_exp * SERdataGRM$gdp_imp)
+plot2 <- ggplot(SERdataDS, aes(x = logdifference, y = logtrade,)) +
+ geom_point(shape=1) + 
+ geom_smooth(method=lm, # Add linear regression line
+ se=FALSE) + # Don't add shaded confidence region
+ theme_classic() + #no background
+ ggtitle("Trade versus GDP combined") +
+ theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
+ labs(y="Log(Trade)", x = "log(GDP combined)") + # set names for axes
+ scale_y_log10(labels = scales::comma)# ln base scale
+plot2
+```
+
+### Scatter plot and line of best fit for trade versus combined GDP (improved) - clustered
+
+```{r graph3, warning=FALSE}
+#TRADE DISTANCE CLUSTER CONTIGUITY
+plot3 <- ggplot(SERdataDS, aes(x=logdistance,
+                         y=logtrade, colour=factor(contig))) +
+                        geom_point(shape=1) + 
+                        geom_smooth(method=lm, # Add linear regression line
+                                se=FALSE,   # Don't add shaded confidence region
+                                ) + 
+                        theme_classic() + #no background
+                        ggtitle("Log Distance vs Log Trade contiguity") +
+                        theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
+                        labs(y="Distance", x = "Trade") + # set names for axes
+                        scale_y_log10(labels = scales::comma)# ln base scale
+plot3
+```
+```{r graph4, warning=FALSE}
+# COMBINED GDP TRADE CONTINUITY
+plot4 <- ggplot(SERdataDS, aes(x=log(gdp_exp * gdp_imp),
+                         y=log(trade), colour=factor(contig))) +
+                        geom_point(shape=1) + # Use hollow circles
+                        geom_smooth(method=lm, # Add linear regression line
+                                se=FALSE,   # Don't add shaded confidence region
+                                ) + 
+                        theme_classic() + #no background
+                        ggtitle("Trade versus GDP contiguity") +
+                        theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
+                        labs(y="Log(Trade)", x = "log(GDP combined)") + # set names for axes
+                        scale_y_log10(labels = scales::comma)# ln base scale
+plot4
+```
+
+```{r graph5, warning=FALSE}
+# COMBINED TRADE DISTANCE LANGUAGE
+plot5 <- ggplot(SERdataDS, aes(x=logdistance,
+                         y=logtrade, colour=factor(comlang_off))) +
+                        geom_point(shape=1) + # Use hollow circles
+                        geom_smooth(method=lm, # Add linear regression line
+                                se=FALSE,   # Don't add shaded confidence region
+                                ) + 
+                        theme_classic() + #no background
+                        ggtitle("Log Distance vs Log Trade comm. lan.") +
+                        theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
+                        labs(y="Distance", x = "Trade") + # set names for axes
+                        scale_y_log10(labels = scales::comma)# ln base scale
+plot5
+
+```
+```{r graph6, warning=FALSE}
+# COMBINED GDP TRADE COMMON LANGUAGE
+plot6 <- ggplot(SERdataDS, aes(x=log(gdp_exp * gdp_imp),
+                         y=log(trade), colour=factor(comlang_off))) +
+                        geom_point(shape=1) + # Use hollow circles
+                        geom_smooth(method=lm, # Add linear regression line
+                                se=FALSE,   # Don't add shaded confidence region
+                                ) + 
+                        theme_classic() + #no background
+                        ggtitle("Trade versus GDP common language") +
+                        theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
+                        labs(y="Log(Trade)", x = "log(GDP combined)") + # set names for axes
+                        scale_y_log10(labels = scales::comma)# ln base scale
+plot6
+```
+
+## Estimating the Intuitive Gravity Model
+
+A command that performs OLS with robust clustered standard errors and equivalent to the regress command in Stata through, is lm_robust from the estimatr package. It takes the following format:
+
+```{r reg1, warning=FALSE}
+#QUESTION 3
+SERdataLR <- SERdata[complete.cases(SERdata[ ,
+c("dist","gdp_exp","gdp_imp")]),]
+SERdataLR <- SERdataLR[SERdataLR$trade != 0, ]
+install.packages("estimatr")
+library(estimatr)
+reg1 <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) +
+contig + comlang_off + colony + comcol, cluster = dist, data = SERdataLR,
+se_type = "stata")
+summary(reg1)
+```
+### Hypothesis tests for both GDP coefficients are equal to unity and all historical and cultural coefficients are equal to zero.
+
+Testing a compound hypothesis in R can be done through the linearHypothesis command in the car package. Since we are using robust clustered standard errors, we have to adjust for the degrees of freedom. We can extract the new p-value by using the pf command and specifying our degrees of freedom. (In this case they are the number of coefficients we are testing for and the number of clusters minus one.)
+
+```{r HT1, warning=FALSE}
+# prepare the data as required in Box 1 and Box 7, we create new
+# variables in order to test linear hypotheses
+SERdataLR$ln_gdp_imp <- log(SERdataLR$gdp_imp)
+SERdataLR$ln_gdp_exp <- log(SERdataLR$gdp_exp)
+reg1_star <- lm_robust(log(trade) ~ log(dist) + ln_gdp_imp + ln_gdp_exp +
+contig + comlang_off + colony + comcol,
+cluster = dist, data = SERdataLR, se_type = "stata")
+install.packages("car") 
+library(car)
+```
+
+
+```{r HT2, warning=FALSE}
+ftest1 <- linearHypothesis(reg1_star,c("ln_gdp_imp = 1",
+"ln_gdp_exp = 1"), test = "F")
+ftest1
+
+pf(ftest1$F, 2, length(unique(SERdataLR$dist))-1, lower.tail=FALSE)
+```
+
+```{r HT, warning=FALSE}
+ftest2 <- linearHypothesis(reg1_star,c("contig", "comlang_off", "colony",
+"comcol"), test = "F")
+
+ftest2
+
+pf(ftest2$F, 4, length(unique(SERdataLR$dist))-1, lower.tail=FALSE)
+```
+
+
+
+### OLS estimates of an augmented gravity model.
+
+```{r reg2, warning=FALSE}
+# prepare the data as required in Box 1 and Box 7
+# install.packages("estimatr") # uncomment in order to install package
+library(estimatr)
+reg2 <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) +
+contig + comlang_off + colony + comcol + etcr_exp +
+etcr_imp, cluster = dist, data = SERdataLR,
+se_type = "stata")
+summary(reg2)
+
+
+# 1 coefficient
+
+
+
+```
+
+
+
+## Estimating the Structural Gravity Model
+
+### OLS estimates of a gravity model with fixed effects by importer and exporter.
+
+```{r reg3}
+#QUESTION 4
+# make sure you have the data loaded and transformed as in Box 1
+# include only complete cases for variables for which we take log
+SERdataFX1 <- SERdata[SERdata$trade!=0 & SERdata$dist!=0,]
+install.packages("estimatr")
+library(estimatr)
+reg3 <- lm_robust(log(trade) ~ log(dist) + contig + comlang_off +
+colony + comcol + exp + imp,
+cluster = dist, data = SERdataFX1, se_type = "stata")
+summary(reg3)
+```
+```{r reg4}
+#QUESTION 5
+# make sure you have the data loaded and transformed as in Box 1
+# include only complete cases for variables for which we take log
+SERdataFX1 <- SERdata[SERdata$trade!=0 & SERdata$dist!=0,]
+install.packages("estimatr")
+library(estimatr)
+reg3 <- lm_robust(log(trade) ~ log(dist) + contig + comlang_off +
+colony + comcol + exp + imp,
+cluster = dist, data = SERdataFX1, se_type = "stata")
+summary(reg3)
+```
+
+
+
+
+## Summary of Results
+
+```{r models, results = 'asis', warning=FALSE}
+install.packages("stargazer") 
+install.packages("texreg") 
+install.packages("texreg") 
+
+# load package
+#library("dplyr")
+library("stargazer")
+#tab_model(reg1)
+library(texreg)
+
+#stargazer(reg1a, type = 'html')
+#stargazer(SERdataDS, type = "text")
+
+# texreg::screenreg(list(reg1, reg2, reg3),     # if knitting to pdf
+#                   omit.coef=c('exp|imp'),
+# #custom.coef.names = reglabels,
+# include.ci = FALSE,
+# caption = '',
+# custom.note = 'Note: robust standard errors.')
+
+texreg(list(reg1, reg2, reg3),     # if knitting to pdf
+                  omit.coef=c('exp|imp'),
+#custom.coef.names = reglabels,
+include.ci = FALSE,
+caption = '',
+custom.note = 'Note: robust standard errors.')
+
+# htmlreg(list(reg1, reg2, reg3),  # if knitting to html
+# #custom.coef.names = reglabels,
+# include.ci = FALSE,
+# caption = '',
+# custom.note = 'Note: robust standard errors.')
+
+```
+
