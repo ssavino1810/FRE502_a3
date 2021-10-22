@@ -10,7 +10,7 @@ output:
 ## Setup
 
 ```{r packages, include=FALSE}
-pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate)
+pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate, psych, tidyverse)
 ```
 ```{r, include=FALSE}
 here::here()
