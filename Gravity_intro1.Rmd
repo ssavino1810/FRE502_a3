@@ -10,7 +10,7 @@ output:
 ## Setup
 
 ```{r packages, include=FALSE}
-pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate, psych, tidyverse)
+pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate,tidyr,tidyverse, estimatr)
 ```
 ```{r, include=FALSE}
 here::here()
@@ -46,6 +46,7 @@ library(dplyr)
 SERdataDS <- filter_at(SERdataDS, vars("trade"), all_vars((.) != 0))
 summary(SERdataDS)
 sum(SERdataDS)
+library(psych)
 describe(SERdataDS)
 #library(stargazer)
 #stargazer(SERdataDS, type = "html")
@@ -250,13 +251,25 @@ summary(reg3)
 #QUESTION 5
 # make sure you have the data loaded and transformed as in Box 1
 # include only complete cases for variables for which we take log
-SERdataFX1 <- SERdata[SERdata$trade!=0 & SERdata$dist!=0,]
+OECDdummy <- SERdata %>%
+  mutate(oecd = ifelse(is.na(SERdata$etcr_exp)|is.na(SERdata$etcr_imp), 0, 1))
+
+OECDdumDS <- OECDdummy[,c("trade", "dist", "gdp_exp","gdp_imp","contig", "comlang_off", "colony", "comcol", "oecd")]
+
+
+
+OECDLR <- OECDdumDS[complete.cases(OECDdumDS[ ,
+c("dist","gdp_exp","gdp_imp")]),]
+
+OECDLR <- OECDdumDS[OECDdumDS$trade != 0, ]
+
 install.packages("estimatr")
-library(estimatr)
-reg3 <- lm_robust(log(trade) ~ log(dist) + contig + comlang_off +
-colony + comcol + exp + imp,
-cluster = dist, data = SERdataFX1, se_type = "stata")
-summary(reg3)
+
+
+regoecd <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) + contig + comlang_off + colony + comcol + oecd, cluster = dist, data = OECDLR,
+se_type = "stata")
+summary(regoecd)
+
 ```
 
 
