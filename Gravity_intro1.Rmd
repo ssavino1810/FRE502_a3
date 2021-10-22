@@ -1,6 +1,6 @@
 ---
 title: "The Gravity Model"
-author: "Jesus Davila- Sara Sabino- Adoracion Hernandez"
+author: "Jesus Davila- Sara Savino- Adoracion Hernandez"
 date: "10/2021"
 output:
   pdf_document: default
@@ -170,7 +170,7 @@ se_type = "stata")
 summary(reg1)
 ```
 ### Hypothesis tests for both GDP coefficients are equal to unity and all historical and cultural coefficients are equal to zero.
-
+#Question 3.5 
 Testing a compound hypothesis in R can be done through the linearHypothesis command in the car package. Since we are using robust clustered standard errors, we have to adjust for the degrees of freedom. We can extract the new p-value by using the pf command and specifying our degrees of freedom. (In this case they are the number of coefficients we are testing for and the number of clusters minus one.)
 
 ```{r HT1, warning=FALSE}
