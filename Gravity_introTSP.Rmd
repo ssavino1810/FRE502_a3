@@ -99,7 +99,7 @@ plot3 <- ggplot(TSPdataDS, aes(x=logdistance,
                         theme_classic() + #no background
                         ggtitle("Log Distance vs Trade contiguity") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Distance", x = "Trade") + # set names for axes
+                        labs(y="trade", x = "distance") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot3
 ```
@@ -130,7 +130,7 @@ plot5 <- ggplot(TSPdataDS, aes(x=logdistance,
                         theme_classic() + #no background
                         ggtitle("Log Distance vs Trade comm. lan.") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Distance", x = "Trade") + # set names for axes
+                        labs(y="Trade", x = "Distance") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot5
 
