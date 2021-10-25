@@ -68,9 +68,9 @@ plot1 <- ggplot(TSPdataDS, aes(x = logdistance, y = trade,)) +
  geom_smooth(method=lm, # Add linear regression line
  se=FALSE) + # Don't add shaded confidence region
  theme_classic() + #no background
- ggtitle("Trade versus Distance combined") +
+ ggtitle("Trade vs. Log Distance") +
  theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
- labs(y="Trade", x = "Log(Distance)") + # set names for axes
+ labs(y="Trade", x = "Log Distance") + # set names for axes
  scale_y_log10(labels = scales::comma)# ln base scale
 plot1
 ```
@@ -85,9 +85,9 @@ plot2 <- ggplot(TSPdataDS, aes(x = logdifference, y = trade,)) +
  geom_smooth(method=lm, # Add linear regression line
  se=FALSE) + # Don't add shaded confidence region
  theme_classic() + #no background
- ggtitle("Trade versus Log GDP combined") +
+ ggtitle("Trade vs. Log Combined GDP") +
  theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
- labs(y="Trade", x = "log(GDP combined)") + # set names for axes
+ labs(y="Trade", x = "Log Combined GDP") + # set names for axes
  scale_y_log10(labels = scales::comma)# ln base scale
 plot2
 ```
@@ -105,22 +105,22 @@ plot3 <- ggplot(TSPdataDS, aes(x=logdistance,
                         theme_classic() + #no background
                         ggtitle("Log Distance vs Trade (Clustered by Contiguity)") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Trade", x = "Log(Distance)") + # set names for axes
+                        labs(y="Trade", x = "Log Distance") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot3
 ```
 ```{r graph4, warning=FALSE}
 # COMBINED GDP TRADE CONTINUITY
-plot4 <- ggplot(TSPdataDS, aes(x=log(gdp_exp * gdp_imp),
+plot4 <- ggplot(TSPdataDS, aes(x=logdifference,
                          y=trade, colour=factor(contig))) +
                         geom_point(shape=1) + # Use hollow circles
                         geom_smooth(method=lm, # Add linear regression line
                                 se=FALSE,   # Don't add shaded confidence region
                                 ) + 
                         theme_classic() + #no background
-                        ggtitle("Trade versus GDP (Clustered by Contiguity)") +
+                        ggtitle("Trade vs. GDP (Clustered by Contiguity)") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Trade", x = "log(GDP Combined)") + # set names for axes
+                        labs(y="Trade", x = "Log GDP Combined") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot4
 ```
@@ -143,7 +143,7 @@ plot5
 ```
 ```{r graph6, warning=FALSE}
 # COMBINED GDP TRADE COMMON LANGUAGE
-plot6 <- ggplot(TSPdataDS, aes(x=log(gdp_exp * gdp_imp),
+plot6 <- ggplot(TSPdataDS, aes(x=logdifference,
                          y=trade, colour=factor(comlang_off))) +
                         geom_point(shape=1) + # Use hollow circles
                         geom_smooth(method=lm, # Add linear regression line
@@ -152,7 +152,7 @@ plot6 <- ggplot(TSPdataDS, aes(x=log(gdp_exp * gdp_imp),
                         theme_classic() + #no background
                         ggtitle("Trade vs. Log Combined GDP (Clustered by Comm. Language") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Trade", x = "log(GDP Combined)") + # set names for axes
+                        labs(y="Trade", x = "Log GDP Combined") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot6
 ```
