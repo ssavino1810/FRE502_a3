@@ -26,22 +26,28 @@ TSPdata <- bilateralData[bilateralData$sector=="TSP",]
 ## Data Cleaning and Correlation
 
 ```{r sum, warning=FALSE}
+#Prepare data for correlation-4 variables only 
 TSPdataGRM <- TSPdata[,c("trade","dist","gdp_exp","gdp_imp")]
-# delete rows for which trade=0
+#filter out all rows containing 0 
 row_sub = apply(TSPdataGRM, 1, function(row) all(row !=0 ))
 TSPdataGRM <- TSPdataGRM[row_sub,]
-# calculate the correlation and not include missing values
+#prepare correlation and remove all NA or zero values 
 correlation <- cor(log(TSPdataGRM), use="na.or.complete")
 correlation
 
 ```
 
 ```{r sum2, warning=FALSE}
-TSPdataDS <- TSPdata[,c("trade","dist","gdp_exp","gdp_imp", "contig", "comlang_off", "colony", "comcol", "etcr_exp", "etcr_imp" )]
-# CODE FOR QUESTION 1
+#QUESTION 1
+#Prepare data for descriptive statistics for following variables: trade,  distance,  GDP  of  importer  and  exporter, contiguity,  common  language,  common  colonizer  and  colony
+
+TSPdataDS <- TSPdata[,c("trade","dist","gdp_exp","gdp_imp", "contig", "comlang_off", "colony", "comcol")]
+
+# Filter all rows where trade = 0 
 TSPdataDS <- filter_at(TSPdataDS, vars("trade"), all_vars((.) != 0))
 sumtable(TSPdataDS)
 dim(TSPdataDS)
+
 #stargazer(TSPdataDS, type = "html")
 
 ```
@@ -64,7 +70,7 @@ plot1 <- ggplot(TSPdataDS, aes(x = logdistance, y = trade,)) +
  theme_classic() + #no background
  ggtitle("Trade versus Distance combined") +
  theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
- labs(y="Log(Distance)", x = "Trade") + # set names for axes
+ labs(y="Trade", x = "Log(Distance)") + # set names for axes
  scale_y_log10(labels = scales::comma)# ln base scale
 plot1
 ```
@@ -97,9 +103,9 @@ plot3 <- ggplot(TSPdataDS, aes(x=logdistance,
                                 se=FALSE,   # Don't add shaded confidence region
                                 ) + 
                         theme_classic() + #no background
-                        ggtitle("Log Distance vs Trade contiguity") +
+                        ggtitle("Log Distance vs Trade (Clustered by Contiguity)") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Distance", x = "Trade") + # set names for axes
+                        labs(y="Trade", x = "Log(Distance)") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot3
 ```
@@ -112,9 +118,9 @@ plot4 <- ggplot(TSPdataDS, aes(x=log(gdp_exp * gdp_imp),
                                 se=FALSE,   # Don't add shaded confidence region
                                 ) + 
                         theme_classic() + #no background
-                        ggtitle("Trade versus GDP contiguity") +
+                        ggtitle("Trade versus GDP (Clustered by Contiguity)") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Trade", x = "log(GDP combined)") + # set names for axes
+                        labs(y="Trade", x = "log(GDP Combined)") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot4
 ```
@@ -130,7 +136,7 @@ plot5 <- ggplot(TSPdataDS, aes(x=logdistance,
                         theme_classic() + #no background
                         ggtitle("Log Distance vs Trade comm. lan.") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Distance", x = "Trade") + # set names for axes
+                        labs(y="Trade", x = "Distance") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot5
 
@@ -198,7 +204,6 @@ pf(ftest2$F, 4, length(unique(TSPdataLR$dist))-1, lower.tail=FALSE)
 ```
 
 
-
 ### OLS estimates of an augmented gravity model.
 
 ```{r reg2, warning=FALSE}
@@ -247,9 +252,9 @@ c("dist","gdp_exp","gdp_imp")]),]
 OECDLR <- OECDdumDS[OECDdumDS$trade != 0, ]
 
 
-regoecd <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) + contig + comlang_off + colony + comcol + oecd, cluster = dist, data = OECDLR,
+reg4 <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) + contig + comlang_off + colony + comcol + oecd, cluster = dist, data = OECDLR,
 se_type = "stata")
-summary(regoecd)
+summary(reg4)
 
 ```
 
@@ -274,7 +279,7 @@ summary(regoecd)
 # caption = '',
 # custom.note = 'Note: robust standard errors.')
 
-texreg(list(reg1, reg2, reg3),     # if knitting to pdf
+texreg(list(reg1, reg3, reg4),     # if knitting to pdf
                   omit.coef=c('exp|imp'),
 #custom.coef.names = reglabels,
 include.ci = FALSE,
