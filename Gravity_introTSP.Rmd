@@ -134,9 +134,9 @@ plot5 <- ggplot(TSPdataDS, aes(x=logdistance,
                                 se=FALSE,   # Don't add shaded confidence region
                                 ) + 
                         theme_classic() + #no background
-                        ggtitle("Log Distance vs Trade comm. lan.") +
+                        ggtitle("Log Dist. vs Trade (Clustered by Common Language") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Trade", x = "Distance") + # set names for axes
+                        labs(y="Trade", x = "Log Distance") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot5
 
@@ -150,9 +150,9 @@ plot6 <- ggplot(TSPdataDS, aes(x=log(gdp_exp * gdp_imp),
                                 se=FALSE,   # Don't add shaded confidence region
                                 ) + 
                         theme_classic() + #no background
-                        ggtitle("Trade versus GDP common language") +
+                        ggtitle("Trade vs. Log Combined GDP (Clustered by Comm. Language") +
                         theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
-                        labs(y="Log(Trade)", x = "log(GDP combined)") + # set names for axes
+                        labs(y="Trade", x = "log(GDP Combined)") + # set names for axes
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot6
 ```
