@@ -1,16 +1,22 @@
 ---
 title: "The Gravity Model"
 author: "Jesus Davila- Sara Savino- Adoracion Hernandez"
-date: "10/2021"
+date: "25/10/2021"
 output:
-  pdf_document: default
-  html_document: default
+pdf_document:
+    toc: true
+    toc_depth: 3
+always_allow_html: true
 ---
 
-## Setup
+# Background and Setup 
 
+In this assignment, we will be working with the data set and regressions used in Shepherd, Doytchinova and Kravchenko’s 2019 User Guide for using R to estimate the Gravity Model of International Trade. 
+
+## Setup
 ```{r packages, include=FALSE}
-pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate,tidyr,tidyverse, estimatr, foreign, stats, psych, stargazer,texreg, car, vtable)
+#Load the required packages 
+pacman::p_load(here, rjson, dplyr, ggplot2, gridExtra, kableExtra,reshape2,lubridate,tidyr,tidyverse, estimatr, foreign, stats, psych, stargazer,texreg, car, vtable, tinytex, install_tinytex)
 ```
 
 ```{r, include=FALSE}
@@ -18,6 +24,7 @@ here::here()
 ```
 
 ```{r setup, warning=FALSE}
+#Import the data and select the TSP sector 
 knitr::opts_chunk$set(echo = TRUE)
 bilateralData <- read.dta("servicesdataset 2.dta")
 TSPdata <- bilateralData[bilateralData$sector=="TSP",]
@@ -31,38 +38,47 @@ TSPdataGRM <- TSPdata[,c("trade","dist","gdp_exp","gdp_imp")]
 #filter out all rows containing 0 
 row_sub = apply(TSPdataGRM, 1, function(row) all(row !=0 ))
 TSPdataGRM <- TSPdataGRM[row_sub,]
+
 #prepare correlation and remove all NA or zero values 
 correlation <- cor(log(TSPdataGRM), use="na.or.complete")
-correlation
-
+print(correlation)
 ```
 
+# QUESTION 1 
+
+## Summary Statistics
+We first cleaned and prepared the dataset by selecting the Transport Services sector and selecting the variables we are interested in. These includes trade (volume), distance (the geographical space between countries in miles), GDP of export country, GDP of import country, contig (common land border), comlang_off (common official language), colony (denotes if the countries were ever in a colonial relationship) and comcol (denotes that the countries were colonized by the same power). 
+
+After cleaning the data to remove all instances in which the amount of trade is zero, we generated the descriptive statistics for the data. 
+
 ```{r sum2, warning=FALSE}
-#QUESTION 1
 #Prepare data for descriptive statistics for following variables: trade,  distance,  GDP  of  importer  and  exporter, contiguity,  common  language,  common  colonizer  and  colony
 
 TSPdataDS <- TSPdata[,c("trade","dist","gdp_exp","gdp_imp", "contig", "comlang_off", "colony", "comcol")]
 
 # Filter all rows where trade = 0 
 TSPdataDS <- filter_at(TSPdataDS, vars("trade"), all_vars((.) != 0))
+
+#Generate summary statistics table
 sumtable(TSPdataDS)
 dim(TSPdataDS)
-
-#stargazer(TSPdataDS, type = "html")
-
 ```
 
 
-## 
+## Describe the Dimensions of the Data 
 
-### Scatter plot and line of best fit for trade versus distance.
+The dataset provides information for 2029 trade combinations (country pairs) across these 8 variables. Each of these combinations represent the trade relationship between a pair of countries, with a country being either the exporter or importer. Distance, GDP Importer, contig, comlang_off, colony and comcol contain 31 missing observations, while GDP Export contain 27 missing observations.  
+
+In terms of trade, the average trade between pairs of countries was 220 credits with a minimum of 0 and a maximum of 8145. The average distance between countries who trade is 5,279 kms, measured by the distance between the most populated cities in each country, with a minimum of 59  and a maximum of 19,263. The mean GDP of importers and exporters is similar as the same pairs of countries are analyzed, although we observe a high standard deviation as we have considerable variation in the data: the data includes very small countries and very large countries. From the data we can see that most countries do not share a border, common language or common colonizer as demonstrated by the very low average for each dummy variable. 
+
+# QUESTION 2
+
+## 2.1. Trade and Log Distance 
 
 ```{r graph1, warning=FALSE}
-# CODE FOR QUESTION 2
-# TRADE AND DISTANCE
 df = read.dta("servicesdataset 2.dta", convert.f=TRUE)
-logdistance <- log(TSPdataGRM$dist)
-logtrade <- log(TSPdataGRM$trade)
+logdistance <- log(TSPdataGRM$dist) #Rows containing zero already filtered out
+logtrade <- log(TSPdataGRM$trade) #Rows containing zero already filtered out 
 plot1 <- ggplot(TSPdataDS, aes(x = logdistance, y = trade,)) +
  geom_point(shape=1) + 
  geom_smooth(method=lm, # Add linear regression line
@@ -75,16 +91,17 @@ plot1 <- ggplot(TSPdataDS, aes(x = logdistance, y = trade,)) +
 plot1
 ```
 
-### Scatter plot and line of best fit for trade versus combined GDP. 
+We produce a scatterplot to examine the strength and direction of the relationship between distance and trade. We take the natural log of the distance variable, and keep trade linear. The resulting scatterplot shows us that trade and distance are moderately negatively correlated. This finding supports the intuition that countries which are further apart, and for which transport and logistical costs increase, trade less.  Our results are aligned with the traditional definition of the gravity model as described by Tinbergen in 1962 or Anderson in 1979. 
+
+## 2.2 Trade and Combined GDP
 
 ```{r graph2, warning=FALSE}
-#TRADE AND COMBINED GDP
 logdifference <- log(TSPdataGRM$gdp_exp * TSPdataGRM$gdp_imp)
 plot2 <- ggplot(TSPdataDS, aes(x = logdifference, y = trade,)) +
  geom_point(shape=1) + 
  geom_smooth(method=lm, # Add linear regression line
  se=FALSE) + # Don't add shaded confidence region
- theme_classic() + #no background
+ theme_classic() + #No background
  ggtitle("Trade vs. Log Combined GDP") +
  theme(plot.title = element_text(hjust = 0.5)) + # put title in the middle
  labs(y="Trade", x = "Log Combined GDP") + # set names for axes
@@ -92,10 +109,11 @@ plot2 <- ggplot(TSPdataDS, aes(x = logdifference, y = trade,)) +
 plot2
 ```
 
-### Scatter plot and line of best fit for trade versus combined GDP (improved) - clustered
+We create a scatter plot which takes the log of the combined export and import country GDP, and plot it against trade. The scatterplot shows a positive relationship between trade and combined GDP, confirming the basic intuition that bigger countries tend to trade more among themselves in line with the predictions of the Gravity model.
+
+## 2.3. a. Trade and Distance Clustered by Contiguity 
 
 ```{r graph3, warning=FALSE}
-#TRADE DISTANCE CLUSTER CONTIGUITY
 plot3 <- ggplot(TSPdataDS, aes(x=logdistance,
                          y=trade, colour=factor(contig))) +
                         geom_point(shape=1) + 
@@ -109,8 +127,14 @@ plot3 <- ggplot(TSPdataDS, aes(x=logdistance,
                         scale_y_log10(labels = scales::comma)# ln base scale
 plot3
 ```
+
+We repeat the same scatter plot as in 3.1, but cluster it by contiguity this time. The scatter plot indicates that for countries that share a land border, there is a positive relationship between distance and trade, while this relationship becomes negative for countries that do not share a land border. 
+
+It seems that when countries share a land border, distance becomes a less important barrier to trade, and the volume of trade increases as the distance increases. It could reflect that countries that share a border may lift trade restrictions, which facilitate trade flows despite the increased costs associated with travel. This collinearity between distance and multilateral resistance is one of the reasons that we introduce fixed effects later on in this assignment. For countries that do not share a land border, distance becomes much more important, with trade volumes declining as distance increases, in line with the prediction of the Gravity model.
+
+## 2.3.b. Trade and Combined GDP Clustered by Contiguity 
 ```{r graph4, warning=FALSE}
-# COMBINED GDP TRADE CONTINUITY
+
 plot4 <- ggplot(TSPdataDS, aes(x=logdifference,
                          y=trade, colour=factor(contig))) +
                         geom_point(shape=1) + # Use hollow circles
@@ -125,8 +149,13 @@ plot4 <- ggplot(TSPdataDS, aes(x=logdifference,
 plot4
 ```
 
+We repeat the scatter plot plotting the log of combined GDP against trade, but cluster it by contiguity this time. We find that the positive relationship between GDP and trade holds up whether countries share a land border or not. 
+
+Overall, graphical evidence seems to support that countries with a larger GDP will engage in more trade. Distance becomes a factor negatively affecting trade between countries across the board, except for countries which share a land border. For countries that share a land border, it seems that distance not only becomes less important, but that trade actually increases as distance increases. For countries that do not share a land border, we see a stronger positive relationship between GDP and trade than for countries that do share a land border. This intuitively makes sense when we consider that many countries with a larger GDP that may engage in trade with each other do not share a land border (e.g. the USA and China). Additionally, distance measures the distance between the most populated cities in each country. In many cases, these cities might be far from the border between the countries (e.g. Washington D.C. and Mexico City). 
+
+## 2.4.a. Trade and Log Distance Clustered by Common Language
+
 ```{r graph5, warning=FALSE}
-# COMBINED TRADE DISTANCE LANGUAGE
 plot5 <- ggplot(TSPdataDS, aes(x=logdistance,
                          y=trade, colour=factor(comlang_off))) +
                         geom_point(shape=1) + # Use hollow circles
@@ -141,8 +170,12 @@ plot5 <- ggplot(TSPdataDS, aes(x=logdistance,
 plot5
 
 ```
+
+We run the same scatter plot as in 2.1., this time clustering by common language. We find that the negative relationship between distance and trade remains true whether countries share an official language or not, and that the strength of the relationship is almost equivalent in both cases. 
+
+## 2.4.b. Trade and Log Combined GDP Clustered by Common Language 
+
 ```{r graph6, warning=FALSE}
-# COMBINED GDP TRADE COMMON LANGUAGE
 plot6 <- ggplot(TSPdataDS, aes(x=logdifference,
                          y=trade, colour=factor(comlang_off))) +
                         geom_point(shape=1) + # Use hollow circles
@@ -157,12 +190,12 @@ plot6 <- ggplot(TSPdataDS, aes(x=logdifference,
 plot6
 ```
 
-## Estimating the Intuitive Gravity Model
+We run the same scatter plot as in 2.2., this time clustering by common language. We find that the positive relationship between GDP and trade remains true whether countries share an official language or not, in line with the predictions of the Gravity model. 
 
-A command that performs OLS with robust clustered standard errors and equivalent to the regress command in Stata through, is lm_robust from the estimatr package. It takes the following format:
+# QUESTION 3
 
 ```{r reg1, warning=FALSE}
-#QUESTION 3
+#Regression 
 TSPdataLR <- TSPdata[complete.cases(TSPdata[ ,
 c("dist","gdp_exp","gdp_imp")]),]
 TSPdataLR <- TSPdataLR[TSPdataLR$trade != 0, ]
@@ -171,20 +204,42 @@ contig + comlang_off + colony + comcol, cluster = dist, data = TSPdataLR,
 se_type = "stata")
 summary(reg1)
 ```
-### Hypothesis tests for both GDP coefficients are equal to unity and all historical and cultural coefficients are equal to zero.
-#Question 3.5 
-Testing a compound hypothesis in R can be done through the linearHypothesis command in the car package. Since we are using robust clustered standard errors, we have to adjust for the degrees of freedom. We can extract the new p-value by using the pf command and specifying our degrees of freedom. (In this case they are the number of coefficients we are testing for and the number of clusters minus one.)
+
+## 3.1. Discuss the overall quality of your model (i.e. goodness of fit and results from F-test)
+
+The R² is 0.60, which indicates that the model fits the data relatively well: the explanatory variables account for over 60% of the observed variation in TSP trade. The null hypothesis belonging to this F-test is that all of the coefficients in the model except for the intercept are zero, which would indicate that no linear correlation exists. The P value $(2.2e-16)$ of the F-statistic is significant at 1% level, so we reject the null hypothesis that all coefficients for the model are jointly zero, further confirming that this model is a relatively good fit. 
+
+## 3.2. Describe the effect of distance on trade.
+Distance has a negative correlation with trade, a result which is in line with the Gravity Model which predicts trade will decrease as distance between countries increases. The p-value for the distance explanatory variable is $1.789e-163$, and we can therefore conclude that distance has a statistically significant relationship with trade at 1% significance. The coefficient represents that, on average, a 1% increase in the distance between two countries would lead trade to decrease by 0.8083%.
+
+## 3.3. Discuss how relevant it is for trade partners:
+
+### 3.3.1. To have a common border 
+
+Sharing a common border has a positive correlation with trade. The p-value for the distance explanatory variable is $1.946e-02$, and we can therefore conclude that distance does not have a statistically significant relationship with trade at 1% significance level, but does at 5% significance level. At 5% significance, we would expect that on average sharing a common border increases trade between partners by 45.26% ($e.3734-1$). 
+
+### 3.3.2. to speak the same language.
+
+Sharing a common official language has a positive correlation with trade. The p-value for the comlang_off explanatory variable is $2.484e-07$, and we can therefore conclude that distance does have a statistically significant relationship with trade at 1% significance level. At 1% significance, we expect that sharing a common official language increases trade on average between partners by 149% ($e.9162-1$) compared with countries that do not. 
+
+### 3.3.3. to have been in some sort of colonial relationship with the same colonizing nation?
+
+Sharing a common colonizer has a positive correlation with trade. The p-value for the comcol explanatory variable is $1.351e-07$, and we can therefore conclude that sharing a common colonizer has a statistically significant relationship with trade at 1% significance level. At 1% significance, we expect that sharing a common colonizer increases trade on average between partners by 279% ($e1.3337-1$) compared with countries that do not. 
+
+## 3.4. Describe the effect of GDP on trade, for both importers’ and exporters’ GDP.
+
+The results from our table for the Transport Service Sector are consistent with the Gravity Model. Both importer and exporter GDP are positively correlated with trade. In particular, a 1% increase in importer GDP would increase trade on average by 0.74% (significance at 1%), and a 1% increase in exporter GDP would increase trade on average in the TSS sector by 0.78% (significance at 1%). 
+
+## 3.5. Test (and discuss) the joint hypothesis that none of the parameters associated with the dichotomous variables impact trade.
 
 ```{r HT1, warning=FALSE}
-# prepare the data as required in Box 1 and Box 7, we create new
-# variables in order to test linear hypotheses
+# We create new variables in order to test linear hypotheses
 TSPdataLR$ln_gdp_imp <- log(TSPdataLR$gdp_imp)
 TSPdataLR$ln_gdp_exp <- log(TSPdataLR$gdp_exp)
 reg1_star <- lm_robust(log(trade) ~ log(dist) + ln_gdp_imp + ln_gdp_exp +
 contig + comlang_off + colony + comcol,
 cluster = dist, data = TSPdataLR, se_type = "stata")
 ```
-
 
 ```{r HT2, warning=FALSE}
 ftest1 <- linearHypothesis(reg1_star,c("ln_gdp_imp = 1",
@@ -203,65 +258,70 @@ ftest2
 pf(ftest2$F, 4, length(unique(TSPdataLR$dist))-1, lower.tail=FALSE)
 ```
 
-
-### OLS estimates of an augmented gravity model.
-
 ```{r reg2, warning=FALSE}
-# prepare the data as required in Box 1 and Box 7
+# Regression
 reg2 <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) +
 contig + comlang_off + colony + comcol + etcr_exp +
 etcr_imp, cluster = dist, data = TSPdataLR,
 se_type = "stata")
 summary(reg2)
-
-
-# 1 coefficient
-
-
-
 ```
 
 
+We set the decision rule for the hypothesis test at 1% significance level. As above, our null hypothesis is that the coefficients of all variables are 0. We run the test using R, and find that the P value (2.2 × 10-16) of the F-test is lower than the level of significance of 1% which means that we reject our null hypothesis. Based on this test, we conclude that there is sufficient statistical evidence to suggest that the dichotomous variables impact trade in the TSS sector.
 
-## Estimating the Structural Gravity Model
-
-### OLS estimates of a gravity model with fixed effects by importer and exporter.
+# QUESTION 4 
 
 ```{r reg3}
-#QUESTION 4
+#Regression
 TSPdataFX1 <- TSPdata[TSPdata$trade!=0 & TSPdata$dist!=0,]
 reg3 <- lm_robust(log(trade) ~ log(dist) + contig + comlang_off +
 colony + comcol + exp + imp,
 cluster = dist, data = TSPdataFX1, se_type = "stata")
 summary(reg3)
 ```
+
+## 4.1. Discuss the overall quality of your model (i.e. goodness of fit and results from F-test)
+The quality of the model has improved after we include exporter and importer fixed effects, and makes sense when we consider that the structural model accounts for multilateral resistance which may not be missed in the intuitive model. The improvement of the model is reflected by the change in the value of the adjusted R-squared, which has increased from 0.6004 to 0.7701. This means that approximately 77% of variations in trade are explained by our independent variables, compared to 60% in the intuitive model. The F-test cannot be executed in this case, and would not be useful due to the number of variables included in the model (i.e. it is highly unlikely that none of the variables have a relationship with trade). 
+
+## 4.2. Describe the effect of distance on trade.
+The effect of the distance explanatory variable has increased (in negative terms) from -0.8 to -1.15. With fixed effects, each 1% increase in distance diminishes trade by 1.05% when we include fixed effects. We also find that the effect of the common language and common colony variables are no longer statistically significant as explanatory variables for trade, as their P value is higher than 1% with fixed effects.
+
+
+## 4.3 Explain intuitively why variables measuring GDP should not be included in the econometric model when importer and exporter fixed effects are included. What other types of variables can the importer and exporter fixed effects capture?
+
+The intuitive Gravity model fails to account for inward and outward multilateral resistance. When estimating the more precise underlying theory of the model, multilateral resistance becomes hard to measure and we can get around this issue by including fixed effects that introduce a distinct dummy variable for each country as an importer or exporter. However, in order for fixed effects to be included, we cannot include any variables that are collinear with the fixed effects themselves. GDP is one such variable, as GDP calculations already include information on country exports and imports. Multiple regression helps us isolate the relationship between one predictor variable and the dependent variable, holding all other variables constant. Including GDP when we are already including exporter and importer data makes it impossible to hold GDP constant: as GDP changes, so will our fixed effects and thus we would have collinearity. It is then no longer possible to isolate the impact of GDP on trade. Fixed effects may also include variables such as country-specific trade restrictions (e.g. the importer and exporter ETCR scores which measure the restrictiveness of trade). 
+
+# QUESTION 5
+
 ```{r reg4}
-#QUESTION 5
-# make sure you have the data loaded and transformed as in Box 1
-# include only complete cases for variables for which we take log
+#Regression
 OECDdummy <- TSPdata %>%
   mutate(oecd = ifelse(is.na(TSPdata$etcr_exp)|is.na(TSPdata$etcr_imp), 0, 1))
 
 OECDdumDS <- OECDdummy[,c("trade", "dist", "gdp_exp","gdp_imp","contig", "comlang_off", "colony", "comcol", "oecd")]
-
-
 
 OECDLR <- OECDdumDS[complete.cases(OECDdumDS[ ,
 c("dist","gdp_exp","gdp_imp")]),]
 
 OECDLR <- OECDdumDS[OECDdumDS$trade != 0, ]
 
-
 reg4 <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) + contig + comlang_off + colony + comcol + oecd, cluster = dist, data = OECDLR,
 se_type = "stata")
 summary(reg4)
-
 ```
 
+## 5.1. Discuss the overall quality of your model (i.e. goodness of fit and results from F-test)
+The model has an R-squared value of 0.6024, which means it is a slightly better fit than the intuitive model (0.6019) and indicates that around 60% of the variance in trade can be explained by the explanatory variables when we include a dummy for OECD membership. The P value ($2.2e-16$) of the F-statistic is significant at 1% level, so we reject the null hypothesis that all coefficients for the model are jointly zero, further confirming that this model is a relatively good fit. However, adding the OECD dummy did not bring a substantial improvement to the R-squared.
+
+## 5.2. Describe the effect of distance on trade.
+The effect of distance on trade increased in magnitude from -0.8083(base case) to -0.8276 (OECD), which means that each percentage  increase in distance as measured in Km decreases trade by .82% when we include a dummy for OECD, so the total effect is higher by magnitude of .02%. 
 
 
+## 5.3. What is the effect on trade of being an OECD member?
+Based on the regression analysis for the TSS sector, OECD membership is not significant even at a 10% level which means that being a member of the OECD, when controlling for the variables in the model, does not affect trade.
 
-## Summary of Results
+# Summary of Results
 
 ```{r models, results = 'asis', warning=FALSE}
 
