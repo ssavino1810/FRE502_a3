@@ -254,7 +254,7 @@ OECDLR <- OECDdumDS[OECDdumDS$trade != 0, ]
 
 reg4 <- lm_robust(log(trade) ~ log(dist) + log(gdp_imp) + log(gdp_exp) + contig + comlang_off + colony + comcol + oecd, cluster = dist, data = OECDLR,
 se_type = "stata")
-summary(regoecd)
+summary(reg4)
 
 ```
 
