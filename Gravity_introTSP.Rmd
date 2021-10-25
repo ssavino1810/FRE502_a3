@@ -111,7 +111,7 @@ plot3
 ```
 ```{r graph4, warning=FALSE}
 # COMBINED GDP TRADE CONTINUITY
-plot4 <- ggplot(TSPdataDS, aes(x=log(gdp_exp * gdp_imp),
+plot4 <- ggplot(TSPdataDS, aes(x=logdifference,
                          y=trade, colour=factor(contig))) +
                         geom_point(shape=1) + # Use hollow circles
                         geom_smooth(method=lm, # Add linear regression line
@@ -143,7 +143,7 @@ plot5
 ```
 ```{r graph6, warning=FALSE}
 # COMBINED GDP TRADE COMMON LANGUAGE
-plot6 <- ggplot(TSPdataDS, aes(x=log(gdp_exp * gdp_imp),
+plot6 <- ggplot(TSPdataDS, aes(x=logdifference,
                          y=trade, colour=factor(comlang_off))) +
                         geom_point(shape=1) + # Use hollow circles
                         geom_smooth(method=lm, # Add linear regression line
